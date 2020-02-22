@@ -1,8 +1,8 @@
 #include <iostream>
 #include "System.h"
 #include "DiningPhilosophers.h"
+#include "DiningPhilosophersNew.h"
 #include "readVLTS.h"
-
 int main() {
     //Abstraction test
     //test G16
@@ -57,7 +57,20 @@ int main() {
     System G5_({0, 1}, {{0, 3, 1}, {1, 4, 0}}, {1, 2}, {0});
     G5.sync(G5_);
 */
-    syncAndAbstract(5);
-    testPerformance("vasy_18_73");
+    /*
+    clock_t t1 = clock();
+    syncAndAbstract(10);
+    clock_t t2 = clock();
+    std::cout<<"Incremental Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
+
+    t1 = clock();
+    syncThenAbstract(10);
+    t2 = clock();
+    std::cout<<"Brute-Force Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
+    //testPerformance("vasy_18_73");
+     */
+
+    //syncAndAbsNew(14);
+    syncThenAbsNew(8);
     return 0;
 }

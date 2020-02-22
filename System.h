@@ -8,7 +8,6 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include "iostream"
 class System{
 public:
     using size_t_in_vec = std::vector<size_t >;
@@ -24,7 +23,7 @@ public:
     using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t>>;
     size_t_in_vec states, partitions, partitions_new, lmd, lower_bound, upper_bound;
     size_t_in_vec_in_vec transitions, transPerState;
-    size_t_in_set tau, sigma, init, sigma_sb;
+    size_t_in_set tau = {0}, sigma, init, sigma_sb;
     size_t_in_vec_in_set X;
     delta_t delta;
     synced_delta_t synced_delta;
@@ -40,7 +39,10 @@ public:
     {}
     //Some internal functions
     void transInfo(){
-        delta.clear(); synced_delta.clear();sigmaFeasible.clear();sigma.clear();
+        delta.clear();
+        synced_delta.clear();
+        sigmaFeasible.clear();
+        sigma.clear();
         X.clear();sigma_sb.clear();synced_sigmaFeasible.clear();
         for (const auto &i : transitions){
             //trans to delta
@@ -175,42 +177,7 @@ public:
                 X.insert(ele);
             }
         }while(! delta_X[k].empty());
-/*
-        //result
-        size_t cnt = 0, a, t, b, n = 0;
-        lmd.clear(); transitions.clear(); states.clear();
-        for (const auto &i : synced_delta){
-            if(newStates.find({i.first[0], i.first[1]}) == newStates.end()){
-                newStates[{i.first[0], i.first[1]}] = cnt++;
-                lmd.push_back(std::min(lmd[i.first[0]], G_toSyncWith.lmd[i.first[1]]));
-            }
-            a = newStates[{i.first[0], i.first[1]}];
-            t = i.first[2];
-            for (const auto& j : i.second){
-                if (newStates.find({j[0], j[1]}) == newStates.end()){
-                    newStates[{j[0], j[1]}] = cnt++;
-                    lmd.push_back(std::min(lmd[j[0]], G_toSyncWith.lmd[j[1]]));
-                }
-                b = newStates[{j[0], j[1]}];
-                transitions.push_back({a, t, b});
-                if (std::max(a, b) + 1 > n){
-                    n = std::max(a, b) + 1;
-                }
-            }
-        }
-        for (size_t j = 0; j < n; ++j){
-            states.push_back(j);
-        }
-        partitions_new = partitions;
-        std::cout << "States # : " << n << "\nTransitions # : " << transitions.size() << std::endl;
-        for (const auto &iter : transitions){
-            std::cout << iter[0] << " " << iter[1] << " " << iter[2] << std::endl;
-        }
-        for (const auto &iter : partitions_new){
-            std::cout << iter << " ";
-        }
-        std::cout << std::endl;
- */
+
         syncResult(G_toSyncWith);
         return *this;
     }
@@ -240,6 +207,140 @@ public:
                 }
             }
         }
+    }
+
+    System& syncDelta(System& G_toSyncWith){
+        size_t_in_set sigma_il = sigma, set1, set2, set3, res, sb;
+        size_t_in_vec_in_set delta_val;
+        size_t_in_vec delta_key;
+        size_t k = 0;
+        delta_t delta_temp = G_toSyncWith.delta;
+        sigmaFeasible_t sf_temp = G_toSyncWith.sigmaFeasible;
+        std::set_intersection(sigma.begin(), sigma.end(),
+                              G_toSyncWith.sigma.begin(), G_toSyncWith.sigma.end(), std::inserter(sb, sb.begin()));
+        sigma_sb = sb;
+        std::vector<std::set<std::vector<size_t > > > delta_X;
+        for (auto ele : G_toSyncWith.sigma){
+            sigma_il.insert(ele);
+        }
+        for (auto ele : sigma_sb){
+            sigma_il.erase(ele);
+        }
+        setCrossProduct(init, G_toSyncWith.init, X);
+        delta_X.push_back(X);
+
+        do{
+            ++k;
+            delta_X.emplace_back();
+            for (const auto& i : delta_X[k - 1]){
+                set1.clear(); set2.clear(); set3.clear();
+                synced_sigmaFeasible[i] = {};
+
+                //first for loop
+                res.clear();
+
+                std::set_intersection(sigmaFeasible[i[0]].begin(), sigmaFeasible[i[0]].end(),
+                                      G_toSyncWith.sigmaFeasible[i[1]].begin(), G_toSyncWith.sigmaFeasible[i[1]].end(),
+                                      std::inserter(set1, set1.begin()));
+                std::set_intersection(set1.begin(), set1.end(),
+                                      sigma_sb.begin(), sigma_sb.end(),
+                                      std::inserter(res, res.begin()));
+                set1 = res;
+                for (auto a : set1){
+                    synced_sigmaFeasible[i].insert(a);
+                    delta_key = {i[0], i[1], a};
+                    delta_val.clear();
+                    setCrossProduct(delta[{i[0], a}], G_toSyncWith.delta[{i[1], a}], delta_val);
+                    if (synced_delta[delta_key].empty()){
+                        synced_delta[delta_key] = delta_val;
+                    }
+                    else{
+                        for (const auto& ele : delta_val){
+                            synced_delta[delta_key].insert(ele);
+                        }
+                    }
+                    for (const auto& val:delta_val){
+                        delta_X[k].insert(val);
+                    }
+                }
+
+                //second for loop
+                res.clear();
+                std::set_intersection(sigmaFeasible[i[0]].begin(), sigmaFeasible[i[0]].end(),
+                                      sigma_il.begin(), sigma_il.end(),
+                                      std::inserter(res, res.end()));
+                set2 = res;
+                for (auto a : set2){
+                    synced_sigmaFeasible[i].insert(a);
+                    delta_key = {i[0], i[1], a};
+                    delta_val.clear();
+                    setCrossProduct(delta[{i[0], a}], {i[1]}, delta_val);
+                    if (synced_delta[delta_key].empty()){
+                        synced_delta[delta_key] = delta_val;
+                    }
+                    else{
+                        for (const auto& ele : delta_val){
+                            synced_delta[delta_key].insert(ele);
+                        }
+                    }
+                    for (const auto& val:delta_val){
+                        delta_X[k].insert(val);
+                    }
+                }
+
+                //third for loop
+                res.clear();
+                std::set_intersection(G_toSyncWith.sigmaFeasible[i[1]].begin(), G_toSyncWith.sigmaFeasible[i[1]].end(),
+                                      sigma_il.begin(), sigma_il.end(),
+                                      std::inserter(res, res.end()));
+                set3 = res;
+                for (auto a : set3){
+                    synced_sigmaFeasible[i].insert(a);
+                    delta_key = {i[0], i[1], a};
+                    delta_val.clear();
+                    setCrossProduct({i[0]}, G_toSyncWith.delta[{i[1], a}], delta_val);
+                    if (synced_delta[delta_key].empty()){
+                        synced_delta[delta_key] = delta_val;
+                    }
+                    else{
+                        for (const auto& ele : delta_val){
+                            synced_delta[delta_key].insert(ele);
+                        }
+                    }
+                    for (const auto& val:delta_val){
+                        delta_X[k].insert(val);
+                    }
+                }
+            }
+            for (const auto& ele: X){
+                delta_X[k].erase(ele);
+            }
+            for (const auto& ele : delta_X[k]){
+                X.insert(ele);
+            }
+        }while(! delta_X[k].empty());
+        //result in delta
+        std::map<size_t_in_vec, size_t> states_map;
+        size_t cnt = 0; size_t_in_vec s_lmd;
+        states.clear(); delta.clear(); sigmaFeasible.clear();sigma.clear();
+        sigma_sb.clear();synced_sigmaFeasible.clear();
+        for (const auto &x : X){
+            states_map[x] = cnt;
+            states.push_back(cnt++);
+            s_lmd.push_back(std::min(lmd[x[0]], G_toSyncWith.lmd[x[1]]));
+        }
+        lmd = s_lmd;
+        for (const auto &ele : synced_delta){
+            size_t s = states_map[{ele.first[0], ele.first[1]}];
+            size_t t = ele.first[2];
+            sigma.insert(t);
+            sigmaFeasible[s].insert(ele.first[2]);
+            for (const auto &target : ele.second){
+                delta[{s, t}].insert(states_map[target]);
+            }
+        }
+        X.clear(); synced_delta.clear();
+        return *this;
     }
     //Abstraction
     void boundaries(){
