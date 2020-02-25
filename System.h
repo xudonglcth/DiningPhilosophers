@@ -5,6 +5,7 @@
 #ifndef DININGPHILOSOPHERS_SYSTEM_H
 #define DININGPHILOSOPHERS_SYSTEM_H
 #include <set>
+#include <iostream>
 #include <map>
 #include <utility>
 #include <vector>
@@ -33,6 +34,12 @@ public:
     std::map<size_t_in_vec, size_t> newStates;
     //Constructors;
     System() = default;
+
+    System(size_t_in_vec s, size_t_in_vec_in_vec t, size_t_in_set i)
+            :
+    states(s), transitions(t), init(i)
+    {}
+
     System(size_t_in_vec s, size_t_in_vec_in_vec t, size_t_in_vec p, size_t_in_set tau_)
             :
             states(std::move(s)), transitions(std::move(t)), lmd(std::move(p)), tau(std::move(tau_))
@@ -355,15 +362,15 @@ public:
         }
         std::vector<size_t > indices(states.size() + 1, 0);
 
-        for(auto i : transitions){
-            indices[i[2]]++;
+        for(const auto &i : transitions){
+            ++indices[i[2]];
         }
         size_t sum = 0;
         for (auto &j : indices){
             sum += j;
             j = sum;
         }
-        for(auto k : transitions){
+        for(const auto &k : transitions){
             indices[k[2]]--;
             transPerState[indices[k[2]]] = {k[0], k[1], k[2]};
         }
@@ -373,7 +380,17 @@ public:
         }
     }
     void labelInsert(size_t target, size_t event, size_t block){
-        if (label[target].insert(std::make_pair(event, block)).second){
+        //size_t size_before = label[target].size(), size_after;
+        //std::vector<std::pair<size_t, size_t> > to_insert, vec_res, vec_temp(label[target].begin(), label[target].end());
+        //to_insert.push_back({std::make_pair(event, block)});
+        //std::set_union(vec_temp.begin(), vec_temp.end(), to_insert.begin(), to_insert.end(),
+        //       std::back_inserter(vec_res));
+        //std::set<std::pair<size_t, size_t> > set_temp(vec_res.begin(), vec_res.end());
+        //label[target] = set_temp;
+        //size_after = label[target].size();
+        //if(size_before != size_after)
+        if (label[target].insert(std::make_pair(event, block)).second)
+        {
             for(size_t i = lower_bound[target]; i < upper_bound[target]; i++){
                 //in_going_trans ingoingTrans = inTransPerState[i];
                 if (tau.find(transPerState[i][1]) != tau.end()
@@ -384,6 +401,8 @@ public:
         }
     }
     void transReduce(){
+        std::set<size_t > sts;
+        //std::cout << "Max capacity: "<<sts.max_size()<<std::endl;
         size_t n = states.size(), count;
         hashtable_t hashtable;
         boundaries();
@@ -442,6 +461,12 @@ public:
         //}
         //std::cout << std::endl;
     }
+
+    System & syncInT(System &g_to_sync);
+
+    void outgoingBoundaries();
+
+    void transSigma();
 };
 #endif //DININGPHILOSOPHERS_SYSTEM_H
 //

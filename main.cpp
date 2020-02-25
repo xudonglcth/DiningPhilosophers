@@ -3,60 +3,76 @@
 #include "DiningPhilosophers.h"
 #include "DiningPhilosophersNew.h"
 #include "readVLTS.h"
+#include "SyncInT.h"
+#include "DiningPhilosophersEff.h"
 int main() {
-    //Abstraction test
-    //test G16
     /*
-    std::cout << "Test G16" << std::endl;
-    System::size_t_in_vec state_g16 = {0, 1, 2, 3, 4};
-    System::size_t_in_vec_in_vec trans_g16 = {{0, 2, 1},
-                            {1, 1, 2},
-                            {2, 1, 2},
-                            {0, 1, 3},
-                            {3, 1, 4},
-                            {4, 1, 4}};
-    std::vector<size_t > partitions_new_g16 = {2, 2, 2, 2, 2};
-    System G16(state_g16, trans_g16, partitions_new_g16, {1});
-    G16.transReduce();
-
-    std::cout << "Test G17" << std::endl;
-    System::size_t_in_vec state_g17 = {0, 1, 2};
-    System::size_t_in_vec_in_vec trans_g17 = {{0, 1, 1},
-                            {0, 1, 2},
-                            {1, 2, 1},
-                            {2, 3, 2}};
-    std::vector<size_t> partitions_new_17 = {};
-    System G17(state_g17, trans_g17, partitions_new_17, {1});
-    G17.transReduce();
-
-    //test G19
-    std::cout << "Test G19" << std::endl;
-    System::size_t_in_vec state_g19 = {0, 1, 2, 3};
-    System::size_t_in_vec_in_vec trans_g19 = {{0, 1, 1},
-                            {1, 2, 2},
-                            {0, 2, 2},
-                            {0, 1, 3},
-                            {2, 1, 3},
-                            {3, 2, 3}};
-    std::vector<size_t> partitions_new_19 = {2, 2, 2, 1};
-    System G19(state_g19, trans_g19, partitions_new_19, {1});
-    G19.transReduce();
-    std::cout << "Reduced Transitions #: " << G19.transitions.size()
-    << "\nReduced States #: " << *std::max_element(G19.partitions_new.begin(), G19.partitions_new.end()) + 1<<std::endl;
-
     //Sync test
-    System G1({0, 1}, {{0, 2, 1}, {1, 3, 1}}, {1, 2}, {0});
-    System G1_({0, 1}, {{0, 3, 1}, {1, 4, 1}}, {1, 2}, {0});
-    G1_.sync(G1);
+    {
+        //System G1({0, 1}, {{0, 2, 1},
+        //                   {1, 3, 1}}, {1, 2}, {0});
+        //System G1_({0, 1}, {{0, 3, 1},
+        //                    {1, 4, 1}}, {1, 2}, {0});
+        //G1_.sync(G1);
+        //G1.syncInT(G1_);
 
-    System G4({0, 1, 2}, {{0, 2, 1}, {0, 4, 1}, {0, 3, 2}}, {1, 1, 2}, {0});
-    System G4_({0, 1}, {{0, 2, 1}, {0, 3, 1}}, {1, 2}, {0});
-    G4.sync(G4_);
+        System G4({0, 1, 2}, {{0, 2, 1},
+                              {0, 4, 1},
+                              {0, 3, 2}}, {1, 1, 2}, {0});
+        System G4_({0, 1}, {{0, 2, 1},
+                            {0, 3, 1}}, {1, 2}, {0});
+        G4.init = {0};
+        G4_.init = {0};
+        //G4.sync(G4_);
+        G4_.syncInT(G4);
 
-    System G5({0, 1}, {{0, 2, 1}, {1, 3, 0}}, {1, 2}, {0});
-    System G5_({0, 1}, {{0, 3, 1}, {1, 4, 0}}, {1, 2}, {0});
-    G5.sync(G5_);
+        System G5({0, 1}, {{0, 2, 1},
+                           {1, 3, 0}}, {1, 2}, {0});
+        System G5_({0, 1}, {{0, 3, 1},
+                            {1, 4, 0}}, {1, 2}, {0});
+        G5.init = {0};
+        G5_.init = {0};
+        G5_.syncInT(G5);
+
+
+        System G0 ({0, 1, 2, 3, 4}, {{0, 0, 1}, {1, 1, 2}, {2, 2, 3}, {3, 3, 4}}, {0});
+        System G0_({0, 1, 2, 3, 4}, {{0, 4, 1}, {1, 1, 2}, {2, 4, 3}, {3, 2, 4}}, {0});
+        G0.syncInT(G0_);
+
+        System G1 ({0, 1}, {{0, 2, 1}, {1, 3, 1}}, {0});
+        System G1_ ({0, 1}, {{0, 3, 1}, {1, 4, 1}}, {0});
+        G1.syncInT(G1_);
+
+        System G6({0, 1}, {{0, 2, 0}, {0, 3, 1}}, {0});
+        System G6_({0, 1, 2}, {{0, 2, 1}, {1, 3, 2}}, {0});
+        G6.syncInT(G6_);
+
+        System G7({0, 1, 2}, {{0, 5, 1}, {1, 6, 2}, {2, 3, 2}}, {0});
+        System G7_({0, 1, 2}, {{0, 6, 1}, {1, 8, 2}, {2, 3, 2}}, {0});
+        G7.syncInT(G7_);
+
+        System G8({0, 1}, {{0, 6, 1}, {1, 3, 1}}, {0});
+        System G8_({0, 1, 2}, {{0, 6, 1}, {1, 8, 2}}, {0});
+        G8.syncInT(G8_);
+
+        System G10({0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                {{0, 2, 1}, {1, 3, 2}, {2, 4, 3}, {3, 5, 4}, {4, 6, 5}, {5, 7, 6}, {6, 8, 7}, {7, 9, 8}, {8, 10, 9},
+                 {0, 12, 1}, {1, 13, 3}}, {0});
+        System G10_({0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                   {{0, 2, 1}, {1, 3, 2}, {2, 4, 3}, {3, 5, 4}, {4, 6, 5}, {5, 7, 6}, {6, 8, 7}, {7, 9, 8},
+                    {8, 10, 9}}, {0});
+        G10.syncInT(G10_);
+
+        System G11({0, 1, 2}, {{0, 6, 1}, {1, 10 ,2}}, {0});
+        System G11_({0, 1, 2}, {{0, 7, 2}, {2, 6, 1}}, {0});
+        G11.syncInT(G11_);
+
+    }
 */
+    syncThenAbsEff(7);
+    syncThenAbsNew(7);
+    //syncAndAbsEff(14);
+    //syncAndAbsNew(14);
     /*
     clock_t t1 = clock();
     syncAndAbstract(10);
@@ -67,10 +83,10 @@ int main() {
     syncThenAbstract(10);
     t2 = clock();
     std::cout<<"Brute-Force Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
-    //testPerformance("vasy_18_73");
      */
 
+    //testPerformance("vasy_18_73");
     //syncAndAbsNew(14);
-    syncThenAbsNew(8);
+    //syncThenAbsNew(7);
     return 0;
 }
