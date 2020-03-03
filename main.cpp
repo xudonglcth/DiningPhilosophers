@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "System.h"
 #include "DiningPhilosophers.h"
 #include "DiningPhilosophersNew.h"
@@ -6,7 +7,7 @@
 #include "SyncInT.h"
 #include "DiningPhilosophersEff.h"
 int main() {
-    /*
+
     //Sync test
     {
         //System G1({0, 1}, {{0, 2, 1},
@@ -16,24 +17,30 @@ int main() {
         //G1_.sync(G1);
         //G1.syncInT(G1_);
 
-        System G4({0, 1, 2}, {{0, 2, 1},
-                              {0, 4, 1},
-                              {0, 3, 2}}, {1, 1, 2}, {0});
-        System G4_({0, 1}, {{0, 2, 1},
-                            {0, 3, 1}}, {1, 2}, {0});
-        G4.init = {0};
-        G4_.init = {0};
+        System G4({10, 1, 2}, {{10, 2, 1},
+                              {10, 4, 1},
+                              {10, 3, 2}}, {1, 1, 2}, {0});
+        System G4_({100, 1}, {{100, 2, 1},
+                            {100, 3, 1}}, {1, 2}, {0});
+        G4.init = {10};
+        G4_.init = {100};
         //G4.sync(G4_);
         G4_.syncInT(G4);
+        for (const auto & iter : G4_.transitions){
+            std::cout << iter[0] << " " << iter[1] << " " << iter[2] << std::endl;
+        }
 
-        System G5({0, 1}, {{0, 2, 1},
-                           {1, 3, 0}}, {1, 2}, {0});
-        System G5_({0, 1}, {{0, 3, 1},
-                            {1, 4, 0}}, {1, 2}, {0});
+        std::cout << std::endl;
+        System G5({0, 10}, {{0, 2, 10},
+                           {10, 3, 0}}, {1, 2}, {0});
+        System G5_({0, 10}, {{0, 3, 10},
+                            {10, 4, 0}}, {1, 2}, {0});
         G5.init = {0};
         G5_.init = {0};
         G5_.syncInT(G5);
-
+        for (const auto & iter : G5_.transitions){
+            std::cout << iter[0] << " " << iter[1] << " " << iter[2] << std::endl;
+        }
 
         System G0 ({0, 1, 2, 3, 4}, {{0, 0, 1}, {1, 1, 2}, {2, 2, 3}, {3, 3, 4}}, {0});
         System G0_({0, 1, 2, 3, 4}, {{0, 4, 1}, {1, 1, 2}, {2, 4, 3}, {3, 2, 4}}, {0});
@@ -68,10 +75,13 @@ int main() {
         G11.syncInT(G11_);
 
     }
-*/
-    syncThenAbsEff(7);
-    syncThenAbsNew(7);
-    //syncAndAbsEff(14);
+
+    //syncThenAbsEff(8);
+    //syncThenAbsNew(10);
+    //clock_t t1 = clock();
+    syncAndAbsEff(100);
+    //clock_t t2 = clock();
+    //std::cout<<"Incremental Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
     //syncAndAbsNew(14);
     /*
     clock_t t1 = clock();
@@ -84,8 +94,7 @@ int main() {
     t2 = clock();
     std::cout<<"Brute-Force Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
      */
-
-    //testPerformance("vasy_18_73");
+    //testPerformance("cwi_3_14");
     //syncAndAbsNew(14);
     //syncThenAbsNew(7);
     return 0;

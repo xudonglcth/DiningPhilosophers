@@ -29,23 +29,7 @@ void syncThenAbsEff(size_t n){
         t[1] = 0;
     }
     G.lmd[0] = 1;
-    /*
-    G.transitions.clear();
-    for (const auto & t : G.delta){
-        for (const auto & i : t.second){
-            G.transitions.push_back({t.first[0], 0, i});
-        }
-    }
-     */
-    //clock_t t_1 = clock();
     G.transReduce();
-    //clock_t t_2 = clock();
-    //std::cout<<"Brute-Force Approach Abstraction Run Time: "<<(double)(t_2 - t_1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
-    for (const auto &iter : G.transitions){
-        std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
-    }
-    std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
-
 }
 
 void syncAndAbsEff(size_t n){
@@ -88,7 +72,23 @@ void syncAndAbsEff(size_t n){
             }
         }
         G.lmd[0] = 1;
+        if (cnt == 6){
+            std::ofstream outFile("/Users/liangxudong/Desktop/VLTS/NewFile.txt");
+            outFile <<"des (" << 0 <<", " <<G.transitions.size() <<", " <<G.states.size() <<")\n";
+            for (const auto &e : G.transitions) {
+                if((e[1] == 0) && (e[0] != 0) && (e[2] != 0)){
+                    outFile <<"(" << e[0] << ", "  <<"\""<< "tau" <<"\""<<", " << e[2] <<")"<< "\n";
+                }
+                else{
+                    outFile <<"(" << e[0] << ", " << "\"" << e[1] << "\""<<", " << e[2] <<")"<< "\n";
+                }
+            }
+        }
+        clock_t t1 = clock();
         G.transReduce();
+        clock_t t2 = clock();
+        std::cout<<"One reduction run time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
+
         std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
         //std::cout << "After reduction: " << std::endl;
         //for (const auto &i : G.transitions){
@@ -104,11 +104,24 @@ void syncAndAbsEff(size_t n){
         t[1] = 0;
     }
     G.lmd[0] = 1;
+    std::ofstream outFile("/Users/liangxudong/Desktop/VLTS/LastFile.txt");
+    outFile <<"des (" << 0 <<", " <<G.transitions.size() <<", " <<G.states.size() <<")\n";
+    for (const auto &e : G.transitions) {
+        if((e[1] == 0) && (e[0] != 0) && (e[2] != 0)){
+            outFile <<"(" << e[0] << ", "  <<"\""<< "tau" <<"\""<<", " << e[2] <<")"<< "\n";
+        }
+        else{
+            outFile <<"(" << e[0] << ", " << "\"" << e[1] << "\""<<", " << e[2] <<")"<< "\n";
+        }
+    }
+    clock_t t1 = clock();
     G.transReduce();
+    clock_t t2 = clock();
+    std::cout<<"One reduction run time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
     for (const auto &iter : G.transitions){
         std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
     }
-    std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
+    //std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
     //std::cout << "After reduction: " << std::endl;
     //for (const auto &i : G.transitions){
     //    std::cout << i[0] << " " << i[1] << " "<< i[2] << std::endl;

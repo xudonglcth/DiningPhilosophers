@@ -8,9 +8,8 @@
 #include "DiningPhilosophersNew.h"
 System& System::syncInT(System& g_to_sync){
     /*
-     * Note: sb(shared events) are ignored.
-     * Only deterministic systems are supported.
-     * */
+     * Note:Extra sb(shared events) are ignored.
+     */
     size_t non_deterministic = 0;
     std::map<std::vector<size_t>, size_t > synced_state_map;
     std::vector<std::set<std::vector<size_t > > > delta_x;
@@ -37,28 +36,31 @@ System& System::syncInT(System& g_to_sync){
             v1.clear(); v2.clear(); v_temp.clear();
             x1 = state_pair[0]; x2 = state_pair[1];
             for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
-                v1.push_back(transPerState[i][1]);
+                v1.push_back(transInStateOrder[i][1]);
             }
             for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                v2.push_back(g_to_sync.transPerState[i][1]);
+                v2.push_back(g_to_sync.transInStateOrder[i][1]);
             }
             std::sort(v1.begin(), v1.end()); std::sort(v2.begin(), v2.end());
             //first for loop:
             std::set_intersection(v1.begin(), v1.end(), v2.begin(), v2.end(), std::back_inserter(v_temp));
             for (const auto &a : v_temp){
                 size_t_in_vec_in_vec target;
-                for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
-                    size_t_in_vec target_instance(2, 0);
-                    if (transPerState[i][1] == a){
-                        target_instance[0] = transPerState[i][2];
-                        for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                            if (g_to_sync.transPerState[i][1] == a){
-                                target_instance[1] = g_to_sync.transPerState[i][2];
-                                target.push_back(target_instance);
+                /*
+                    for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
+                        size_t_in_vec target_instance(2, 0);
+                        if (transInStateOrder[i][1] == a){
+                            target_instance[0] = transInStateOrder[i][2];
+                            for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
+                                if (g_to_sync.transInStateOrder[i][1] == a){
+                                    target_instance[1] = g_to_sync.transInStateOrder[i][2];
+                                    target.push_back(target_instance);
+                                }
                             }
                         }
                     }
-                }
+                */
+                findTarget(g_to_sync, a, x1, x2, v_temp, target);
                 if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
                     synced_state_map[{x1, x2}] = cnt;
                     states.push_back(cnt++);
@@ -79,10 +81,14 @@ System& System::syncInT(System& g_to_sync){
                 size_t_in_vec target_instance = {0, x2};
                 size_t_in_vec_in_vec target;
                 for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
-                    if (transPerState[i][1] == a){
-                        target_instance[0] = transPerState[i][2];
+                    if (transInStateOrder[i][1] == a){
+                        target_instance[0] = transInStateOrder[i][2];
                         target.push_back(target_instance);
                     }
+                }
+                if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
+                    synced_state_map[{x1, x2}] = cnt;
+                    states.push_back(cnt++);
                 }
                 for (const auto &target_iter : target){
                     if (synced_state_map.find(target_iter) == synced_state_map.end()){
@@ -100,10 +106,14 @@ System& System::syncInT(System& g_to_sync){
                 size_t_in_vec target_instance = {x1, 0};
                 size_t_in_vec_in_vec target;
                 for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                    if (g_to_sync.transPerState[i][1] == a){
-                        target_instance[1] = g_to_sync.transPerState[i][2];
+                    if (g_to_sync.transInStateOrder[i][1] == a){
+                        target_instance[1] = g_to_sync.transInStateOrder[i][2];
                         target.push_back(target_instance);
                     }
+                }
+                if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
+                    synced_state_map[{x1, x2}] = cnt;
+                    states.push_back(cnt++);
                 }
                 for (const auto &target_iter : target){
                     if (synced_state_map.find(target_iter) == synced_state_map.end()){
@@ -141,18 +151,18 @@ System& System::syncInT(System& g_to_sync){
 }
 
 void System::outgoingBoundaries(){
-    transPerState.clear();
+    transInStateOrder.clear();
     lower_bound.clear();
     upper_bound.clear();
-    for(size_t i = 0; i < states.size(); i++){
+    size_t max_state = *std::max_element(states.begin(), states.end());
+    for(size_t i = 0; i < max_state + 1; i++){
         lower_bound.push_back(0);
         upper_bound.push_back(0);
     }
     for(size_t j = 0; j < transitions.size(); j++){
-        transPerState.push_back({0, 0, 0});
+        transInStateOrder.push_back({0, 0, 0});
     }
-    std::vector<size_t > indices(states.size() + 1, 0);
-
+    std::vector<size_t > indices(max_state + 2, 0);
     for(const auto &i : transitions){
         ++indices[i[0]];
     }
@@ -162,15 +172,30 @@ void System::outgoingBoundaries(){
         j = sum;
     }
     for(const auto &k : transitions){
-        indices[k[0]]--;
-        transPerState[indices[k[0]]] = {k[0], k[1], k[2]};
+        transInStateOrder[--indices[k[0]]] = {k[0], k[1], k[2]};
     }
-    for(size_t i = 0; i < lower_bound.size(); i++){
+    for(size_t i = 0; i < lower_bound.size(); ++i){
         lower_bound[i] = indices[i];
         upper_bound[i] = indices[i + 1];
     }
-
 }
+
+
+void System::findTarget(const System &g_to_sync, const size_t a, const size_t x1, const size_t x2, const size_t_in_vec &v_temp, size_t_in_vec_in_vec& target){
+    for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
+        size_t_in_vec target_instance(2, 0);
+        if (transInStateOrder[i][1] == a){
+            target_instance[0] = transInStateOrder[i][2];
+            for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
+                if (g_to_sync.transInStateOrder[i][1] == a){
+                    target_instance[1] = g_to_sync.transInStateOrder[i][2];
+                    target.push_back(target_instance);
+                }
+            }
+        }
+    }
+}
+
 
 void System::transSigma(){
     sigma.clear();
@@ -178,4 +203,5 @@ void System::transSigma(){
         sigma.insert(t[1]);
     }
 }
+
 #endif //DININGPHILOSOPHERS_SYNCINT_H

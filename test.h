@@ -37,10 +37,10 @@ System& System::syncInT(System& g_to_sync){
             v1.clear(); v2.clear(); v_temp.clear();
             x1 = state_pair[0]; x2 = state_pair[1];
             for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
-                v1.push_back(transPerState[i][1]);
+                v1.push_back(transInStateOrder[i][1]);
             }
             for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                v2.push_back(g_to_sync.transPerState[i][1]);
+                v2.push_back(g_to_sync.transInStateOrder[i][1]);
             }
             std::sort(v1.begin(), v1.end()); std::sort(v2.begin(), v2.end());
             //first for loop:
@@ -49,11 +49,11 @@ System& System::syncInT(System& g_to_sync){
                 size_t_in_vec_in_vec target;
                 for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
                     size_t_in_vec target_instance(2, 0);
-                    if (transPerState[i][1] == a){
-                        target_instance[0] = transPerState[i][2];
+                    if (transInStateOrder[i][1] == a){
+                        target_instance[0] = transInStateOrder[i][2];
                         for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                            if (g_to_sync.transPerState[i][1] == a){
-                                target_instance[1] = g_to_sync.transPerState[i][2];
+                            if (g_to_sync.transInStateOrder[i][1] == a){
+                                target_instance[1] = g_to_sync.transInStateOrder[i][2];
                                 target.push_back(target_instance);
                             }
                         }
@@ -79,8 +79,8 @@ System& System::syncInT(System& g_to_sync){
                 size_t_in_vec target_instance = {0, x2};
                 size_t_in_vec_in_vec target;
                 for (size_t i = lower_bound[x1]; i < upper_bound[x1]; ++i){
-                    if (transPerState[i][1] == a){
-                        target_instance[0] = transPerState[i][2];
+                    if (transInStateOrder[i][1] == a){
+                        target_instance[0] = transInStateOrder[i][2];
                         target.push_back(target_instance);
                     }
                 }
@@ -100,8 +100,8 @@ System& System::syncInT(System& g_to_sync){
                 size_t_in_vec target_instance = {x1, 0};
                 size_t_in_vec_in_vec target;
                 for (size_t i = g_to_sync.lower_bound[x2]; i < g_to_sync.upper_bound[x2]; ++i){
-                    if (transPerState[i][1] == a){
-                        target_instance[1] = g_to_sync.transPerState[i][2];
+                    if (transInStateOrder[i][1] == a){
+                        target_instance[1] = g_to_sync.transInStateOrder[i][2];
                         target.push_back(target_instance);
                     }
                 }
@@ -141,7 +141,7 @@ System& System::syncInT(System& g_to_sync){
 }
 
 void System::outgoingBoundaries(){
-    transPerState.clear();
+    transInStateOrder.clear();
     lower_bound.clear();
     upper_bound.clear();
     for(size_t i = 0; i < states.size(); i++){
@@ -149,7 +149,7 @@ void System::outgoingBoundaries(){
         upper_bound.push_back(0);
     }
     for(size_t j = 0; j < transitions.size(); j++){
-        transPerState.push_back({0, 0, 0});
+        transInStateOrder.push_back({0, 0, 0});
     }
     std::vector<size_t > indices(states.size() + 1, 0);
 
@@ -163,7 +163,7 @@ void System::outgoingBoundaries(){
     }
     for(const auto &k : transitions){
         indices[k[0]]--;
-        transPerState[indices[k[0]]] = {k[0], k[1], k[2]};
+        transInStateOrder[indices[k[0]]] = {k[0], k[1], k[2]};
     }
     for(size_t i = 0; i < lower_bound.size(); i++){
         lower_bound[i] = indices[i];

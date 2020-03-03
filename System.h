@@ -12,18 +12,18 @@
 class System{
 public:
     using size_t_in_vec = std::vector<size_t >;
-    using size_t_in_vec_in_vec =  std::vector<std::vector<size_t >>;
+    using size_t_in_vec_in_vec =  std::vector<std::vector<size_t > >;
     using size_t_in_set = std::set<size_t >;
-    using hashtable_t = std::map<std::pair<size_t, std::set<std::pair<size_t , size_t >>>, size_t >;
-    using delta_t = std::map<std::vector<size_t >, std::set<size_t >>;
+    using hashtable_t = std::map<std::pair<size_t, std::set<std::pair<size_t , size_t > > >, size_t >;
+    using delta_t = std::map<std::vector<size_t >, std::set<size_t > >;
     using synced_delta_t = std::map<std::vector<size_t>, std::set<std::vector<size_t > > >;
-    using sigmaFeasible_t = std::map <size_t, std::set<size_t>>;
+    using sigmaFeasible_t = std::map <size_t, std::set<size_t> >;
     using synced_states_map_t = std::map<std::vector<size_t >, size_t >;
-    using label_t = std::vector<std::set<std::pair<size_t, size_t>>>;
+    using label_t = std::vector<std::set<std::pair<size_t, size_t> > >;
     using size_t_in_vec_in_set = std::set<std::vector<size_t> >;
-    using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t>>;
+    using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t> >;
     size_t_in_vec states, partitions, partitions_new, lmd, lower_bound, upper_bound;
-    size_t_in_vec_in_vec transitions, transPerState;
+    size_t_in_vec_in_vec transitions, transInStateOrder;
     size_t_in_set tau = {0}, sigma, init, sigma_sb;
     size_t_in_vec_in_set X;
     delta_t delta;
@@ -37,7 +37,7 @@ public:
 
     System(size_t_in_vec s, size_t_in_vec_in_vec t, size_t_in_set i)
             :
-    states(s), transitions(t), init(i)
+            states(s), transitions(t), init(i)
     {}
 
     System(size_t_in_vec s, size_t_in_vec_in_vec t, size_t_in_vec p, size_t_in_set tau_)
@@ -358,7 +358,7 @@ public:
             upper_bound.push_back(0);
         }
         for(size_t j = 0; j < transitions.size(); j++){
-            transPerState.push_back({0, 0, 0});
+            transInStateOrder.push_back({0, 0, 0});
         }
         std::vector<size_t > indices(states.size() + 1, 0);
 
@@ -371,14 +371,44 @@ public:
             j = sum;
         }
         for(const auto &k : transitions){
-            indices[k[2]]--;
-            transPerState[indices[k[2]]] = {k[0], k[1], k[2]};
+            transInStateOrder[--indices[k[2]]] = {k[0], k[1], k[2]};
         }
         for(size_t i = 0; i < lower_bound.size(); i++){
             lower_bound[i] = indices[i];
             upper_bound[i] = indices[i + 1];
         }
     }
+
+    void boundariesUnlimited(){
+        lower_bound.clear();
+        upper_bound.clear();
+        size_t max_states = *std::max_element(states.begin(), states.end());
+        for(size_t i = 0; i < max_states; i++){
+            lower_bound.push_back(0);
+            upper_bound.push_back(0);
+        }
+        for(size_t j = 0; j < transitions.size(); j++){
+            transInStateOrder.push_back({0, 0, 0});
+        }
+        std::vector<size_t > indices(max_states + 1, 0);
+
+        for(const auto &i : transitions){
+            ++indices[i[2]];
+        }
+        size_t sum = 0;
+        for (auto &j : indices){
+            sum += j;
+            j = sum;
+        }
+        for(const auto &k : transitions){
+            transInStateOrder[--indices[k[2]]] = {k[0], k[1], k[2]};
+        }
+        for(size_t i = 0; i < lower_bound.size(); i++){
+            lower_bound[i] = indices[i];
+            upper_bound[i] = indices[i + 1];
+        }
+    }
+
     void labelInsert(size_t target, size_t event, size_t block){
         //size_t size_before = label[target].size(), size_after;
         //std::vector<std::pair<size_t, size_t> > to_insert, vec_res, vec_temp(label[target].begin(), label[target].end());
@@ -393,9 +423,9 @@ public:
         {
             for(size_t i = lower_bound[target]; i < upper_bound[target]; i++){
                 //in_going_trans ingoingTrans = inTransPerState[i];
-                if (tau.find(transPerState[i][1]) != tau.end()
-                    && partitions[target] == partitions[transPerState[i][0]]){
-                    labelInsert(transPerState[i][0], event, block);
+                if (tau.find(transInStateOrder[i][1]) != tau.end()
+                    && partitions[target] == partitions[transInStateOrder[i][0]]){
+                    labelInsert(transInStateOrder[i][0], event, block);
                 }
             }
         }
@@ -463,9 +493,8 @@ public:
     }
 
     System & syncInT(System &g_to_sync);
-
     void outgoingBoundaries();
-
+    void findTarget(const System&, size_t, const size_t, const size_t, const size_t_in_vec&, size_t_in_vec_in_vec&);
     void transSigma();
 };
 #endif //DININGPHILOSOPHERS_SYSTEM_H

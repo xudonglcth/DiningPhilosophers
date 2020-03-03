@@ -192,13 +192,13 @@ void syncThenAbsNew(size_t n){
     }
      */
     //clock_t t_1 = clock();
-    G.transReduce();
+    //G.transReduce();
     //clock_t t_2 = clock();
     //std::cout<<"Brute-Force Approach Abstraction Run Time: "<<(double)(t_2 - t_1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
-    for (const auto &iter : G.transitions){
-        std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
-    }
-    std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
+    //for (const auto &iter : G.transitions){
+    //    std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
+    //}
+    //std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
 
 }
 #endif //DININGPHILOSOPHERS_DININGPHILOSOPHERSNEW_H
