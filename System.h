@@ -9,19 +9,21 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 class System{
 public:
     using size_t_in_vec = std::vector<size_t >;
-    using size_t_in_vec_in_vec =  std::vector<std::vector<size_t > >;
+    using size_t_in_vec_in_vec =  std::vector<std::vector<size_t >>;
     using size_t_in_set = std::set<size_t >;
-    using hashtable_t = std::map<std::pair<size_t, std::set<std::pair<size_t , size_t > > >, size_t >;
-    using delta_t = std::map<std::vector<size_t >, std::set<size_t > >;
+    ///using hashtable_t = std::unordered_map<std::pair<size_t, std::set<std::pair<size_t , size_t >>>, size_t >;
+    using hashtable_t = std::unordered_map<std::string, size_t >;
+    using delta_t = std::map<std::vector<size_t >, std::set<size_t >>;
     using synced_delta_t = std::map<std::vector<size_t>, std::set<std::vector<size_t > > >;
-    using sigmaFeasible_t = std::map <size_t, std::set<size_t> >;
+    using sigmaFeasible_t = std::map <size_t, std::set<size_t>>;
     using synced_states_map_t = std::map<std::vector<size_t >, size_t >;
-    using label_t = std::vector<std::set<std::pair<size_t, size_t> > >;
+    using label_t = std::vector<std::set<std::pair<size_t, size_t>>>;
     using size_t_in_vec_in_set = std::set<std::vector<size_t> >;
-    using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t> >;
+    using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t>>;
     size_t_in_vec states, partitions, partitions_new, lmd, lower_bound, upper_bound;
     size_t_in_vec_in_vec transitions, transInStateOrder;
     size_t_in_set tau = {0}, sigma, init, sigma_sb;
@@ -371,44 +373,14 @@ public:
             j = sum;
         }
         for(const auto &k : transitions){
-            transInStateOrder[--indices[k[2]]] = {k[0], k[1], k[2]};
+            indices[k[2]]--;
+            transInStateOrder[indices[k[2]]] = {k[0], k[1], k[2]};
         }
         for(size_t i = 0; i < lower_bound.size(); i++){
             lower_bound[i] = indices[i];
             upper_bound[i] = indices[i + 1];
         }
     }
-
-    void boundariesUnlimited(){
-        lower_bound.clear();
-        upper_bound.clear();
-        size_t max_states = *std::max_element(states.begin(), states.end());
-        for(size_t i = 0; i < max_states; i++){
-            lower_bound.push_back(0);
-            upper_bound.push_back(0);
-        }
-        for(size_t j = 0; j < transitions.size(); j++){
-            transInStateOrder.push_back({0, 0, 0});
-        }
-        std::vector<size_t > indices(max_states + 1, 0);
-
-        for(const auto &i : transitions){
-            ++indices[i[2]];
-        }
-        size_t sum = 0;
-        for (auto &j : indices){
-            sum += j;
-            j = sum;
-        }
-        for(const auto &k : transitions){
-            transInStateOrder[--indices[k[2]]] = {k[0], k[1], k[2]};
-        }
-        for(size_t i = 0; i < lower_bound.size(); i++){
-            lower_bound[i] = indices[i];
-            upper_bound[i] = indices[i + 1];
-        }
-    }
-
     void labelInsert(size_t target, size_t event, size_t block){
         //size_t size_before = label[target].size(), size_after;
         //std::vector<std::pair<size_t, size_t> > to_insert, vec_res, vec_temp(label[target].begin(), label[target].end());
@@ -460,13 +432,25 @@ public:
             }
 
             for (auto current_state : states){
-                if(hashtable.find(std::make_pair(partitions[current_state], label[current_state])) == hashtable.end()){
-                    hashtable[std::make_pair(partitions[current_state], label[current_state])] = count++;
+                std::string s_key;
+                s_key += std::to_string(partitions[current_state]);
+                s_key += ", ";
+                for (const auto &iter : label[current_state]){
+                    s_key += ("pair: " + std::to_string(iter.first) + " and "+ std::to_string(iter.second));
+                }
+                if(hashtable.find(s_key) == hashtable.end()){
+                    hashtable[s_key] = count++;
                 }
             }
 
             for (auto current_state : states){
-                partitions_new[current_state] = hashtable[std::make_pair(partitions[current_state], label[current_state])];
+                std::string s_key;
+                s_key += std::to_string(partitions[current_state]);
+                s_key += ", ";
+                for (const auto &iter : label[current_state]){
+                    s_key += ("pair: " + std::to_string(iter.first) + " and "+ std::to_string(iter.second));
+                }
+                partitions_new[current_state] = hashtable[s_key];
             }
         }while(partitions_new != partitions);
         size_t_in_vec_in_set sPi;
@@ -492,9 +476,9 @@ public:
         //std::cout << std::endl;
     }
 
-    System & syncInT(System &g_to_sync);
+    System& syncInT(System &g_to_sync);
     void outgoingBoundaries();
-    void findTarget(const System&, size_t, const size_t, const size_t, const size_t_in_vec&, size_t_in_vec_in_vec&);
+    void findTarget(const System&, const size_t, const size_t, const size_t, const size_t_in_vec&, size_t_in_vec_in_vec&);
     void transSigma();
 };
 #endif //DININGPHILOSOPHERS_SYSTEM_H

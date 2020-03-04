@@ -9,57 +9,7 @@
 #ifndef DiningPhilosophers_h
 #define DiningPhilosophers_h
 #include "System.h"
-std::vector<System> createDiningPhilosophers(size_t n){
-    System::size_t_in_vec r_up, r_down, eat, think;
-    std::vector<System> Gv, Rv, diningPhilosophersV;
-    size_t i = 0, j = 0;
-    System G, R;
-    for (size_t i = 1; i <= n; ++i){
-        r_up.push_back(i);
-        r_down.push_back(n + i);
-        eat.push_back(2*n + 1);
-        think.push_back(3*n + i);
-    }
-    for (size_t i = 0; i != n; ++i){
-        Gv.push_back(G);
-        Rv.push_back(R);
-    }
-    for (auto &iter : Gv){
-        iter.states = {0, 1, 2, 3, 4, 5, 6};
-        iter.transitions = {
-                {0, think[i], 0},
-                {0, r_up[i], 2},
-                {0, r_up[(i + 1 == n) ? 1 : i + 1], 3},
-                {1, r_down[(i + 1 == n) ? 1 : i + 1], 0},
-                {2, r_up[(i + 1 == n) ? 1 : i + 1], 5},
-                {3, r_up[i], 5},
-                {4, r_down[i], 0},
-                {5, eat[i], 6},
-                {6, r_down[i], 1},
-                {6, r_down[(i + 1 == n) ? 1 : i + 1], 4}
-        };
-        ++i;
-        iter.lmd = {1, 0, 0, 0, 0, 0, 0};
-        iter.init = {0};
-    }
-    for (auto & iter : Rv){
-        iter.states = {0, 1};
-        iter.transitions = {
-                {0, r_up[j], 1},
-                {1, r_down[j], 0}
-        };
-        ++j;
-        iter.init = {0};
-        iter.lmd = {1, 0};
-    }
-
-    for (size_t k = 0; k != n; ++k){
-        diningPhilosophersV.push_back(Gv[k]);
-        diningPhilosophersV.push_back(Rv[k]);
-    }
-    return diningPhilosophersV;
-}
-
+/*
 void syncAndAbstract(size_t n){
     std::vector<System> diningPhils, diningPhilPair;
     System::size_t_in_set taus = {};
@@ -162,4 +112,5 @@ void syncThenAbstract(size_t n){
     std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
 
 }
+ */
 #endif /* DiningPhilosophers_h */

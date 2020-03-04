@@ -97,7 +97,7 @@ void testPerformance(const std::string& testCase){
     t.transReduce();
     clock_t t2 = clock();
     std::cout<<"Sigref: "<<std::endl;
-    std::cout<<"After Reduction State#: "<<*std::max_element(t.partitions_new.begin(), t.partitions_new.end()) + 1<< "\nAfter Reduction Trans#: "<< t.transitions.size()<<std::endl;
+    std::cout<<"After Reduction State#: "<< t.states.size()<< "\nAfter Reduction Trans#: "<< t.transitions.size()<<std::endl;
     std::cout<<"Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
 }
 #endif //LABELREF_READVLTS_H

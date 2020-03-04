@@ -29,7 +29,7 @@ void syncThenAbsEff(size_t n){
         t[1] = 0;
     }
     G.lmd[0] = 1;
-    G.transReduce();
+    //G.transReduce();
 }
 
 void syncAndAbsEff(size_t n){
@@ -54,8 +54,9 @@ void syncAndAbsEff(size_t n){
             t[1] = 0;
         }
     }
-    G.transReduce();
-    std::cout << "After Reduction State#: " << G.states.size() << "\nAfter reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
+    //This abstraction does nothing, so it can be commented
+    //G.transReduce();
+    //std::cout << "After Reduction State#: " << G.states.size() << "\nAfter reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
     //std::cout << "After reduction: " << std::endl;
     //for (const auto &i : G.transitions){
     //    std::cout << i[0] << " " << i[1] << " "<< i[2] << std::endl;

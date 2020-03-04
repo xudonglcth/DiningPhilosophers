@@ -5,16 +5,26 @@
 #ifndef DININGPHILOSOPHERS_SYNCINT_H
 #define DININGPHILOSOPHERS_SYNCINT_H
 
+#include <numeric>
 #include "DiningPhilosophersNew.h"
 System& System::syncInT(System& g_to_sync){
+    size_t m = std::max(states.size(), g_to_sync.states.size());
     /*
      * Note:Extra sb(shared events) are ignored.
      */
     size_t non_deterministic = 0;
-    std::map<std::vector<size_t>, size_t > synced_state_map;
+    std::map<std::vector<size_t>, size_t > synced_state_map, fixed_table;
+    std::map<std::vector<size_t>, bool> visited_table;
     std::vector<std::set<std::vector<size_t > > > delta_x;
     size_t_in_vec v1, v2, v_temp, v_sb, v_union, v_diff;
-    size_t k = 0, x1, x2, cnt = 0;
+    size_t k = 0, x1, x2, cnt = 0, table_cnt = 0;
+    for(const auto & i : states){
+        for (const auto & j : g_to_sync.states){
+            fixed_table[{i, j}] = cnt++;
+            visited_table[{i, j}] = false;
+        }
+    }
+
     init = {0};
     transSigma();
     g_to_sync.transSigma();
@@ -61,16 +71,24 @@ System& System::syncInT(System& g_to_sync){
                     }
                 */
                 findTarget(g_to_sync, a, x1, x2, v_temp, target);
+                //visited_table[{x1, x2}] = true;
+                /*
                 if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
                     synced_state_map[{x1, x2}] = cnt;
                     states.push_back(cnt++);
                 }
+                 */
                 for (const auto &target_iter : target){
+                    /*
                     if (synced_state_map.find(target_iter) == synced_state_map.end()){
                         synced_state_map[target_iter] = cnt;
                         states.push_back(cnt++);
                     }
-                    transitions.push_back({synced_state_map[{x1, x2}], a, synced_state_map[target_iter]});
+                     */
+                    //visited_table[target_iter] = true;
+                    transitions.push_back({m*x1 + x2, a, m*target_iter[0] + target_iter[1]});
+                    states.push_back(m*x1 + x2);
+                    states.push_back(m*target_iter[0] + target_iter[1]);
                     delta_x[k].insert(target_iter);
                 }
             }
@@ -86,16 +104,24 @@ System& System::syncInT(System& g_to_sync){
                         target.push_back(target_instance);
                     }
                 }
+                /*
                 if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
                     synced_state_map[{x1, x2}] = cnt;
                     states.push_back(cnt++);
                 }
+                 */
+                //visited_table[{x1, x2}] = true;
                 for (const auto &target_iter : target){
+                    /*
                     if (synced_state_map.find(target_iter) == synced_state_map.end()){
                         synced_state_map[target_iter] = cnt;
                         states.push_back(cnt++);
                     }
-                    transitions.push_back({synced_state_map[{x1, x2}], a, synced_state_map[target_iter]});
+                     */
+                    //visited_table[target_iter] = true;
+                    transitions.push_back({m*x1 + x2, a, m*target_iter[0] + target_iter[1]});
+                    states.push_back(m*x1 + x2);
+                    states.push_back(m*target_iter[0] + target_iter[1]);
                     delta_x[k].insert(target_iter);
                 }
             }
@@ -111,21 +137,29 @@ System& System::syncInT(System& g_to_sync){
                         target.push_back(target_instance);
                     }
                 }
+                /*
                 if (synced_state_map.find({x1, x2}) == synced_state_map.end()){
                     synced_state_map[{x1, x2}] = cnt;
                     states.push_back(cnt++);
                 }
+                 */
+                //visited_table[{x1, x2}] = true;
                 for (const auto &target_iter : target){
+                    /*
                     if (synced_state_map.find(target_iter) == synced_state_map.end()){
                         synced_state_map[target_iter] = cnt;
                         states.push_back(cnt++);
                     }
-                    transitions.push_back({synced_state_map[{x1, x2}], a, synced_state_map[target_iter]});
+                     */
+                    //visited_table[target_iter] = true;
+                    transitions.push_back({m*x1 + x2, a, m*target_iter[0] + target_iter[1]});
+                    states.push_back(m*x1 + x2);
+                    states.push_back(m*target_iter[0] + target_iter[1]);
                     delta_x[k].insert(target_iter);
                 }
             }
         }
-        assert((synced_state_map[{0, 0}]) == 0);
+        //assert((fixed_table[{0, 0}]) == 0);
         for (const auto& ele: X){
             delta_x[k].erase(ele);
         }
@@ -133,6 +167,21 @@ System& System::syncInT(System& g_to_sync){
             X.insert(ele);
         }
     }while(!delta_x[k].empty());
+std::set<size_t > no_rep(states.begin(), states.end());
+std::unordered_map<size_t, size_t > dense_map;
+size_t s_cnt = 0;
+for (const auto &iter : no_rep){
+    dense_map[iter] = s_cnt++;
+}
+std::vector<size_t > s_vec(s_cnt);
+std::iota(s_vec.begin(), s_vec.end(), 0);
+states = s_vec;
+for (auto &iter_trans: transitions){
+    iter_trans[0] = dense_map[iter_trans[0]];
+    iter_trans[2] = dense_map[iter_trans[2]];
+}
+
+
     lmd.clear();
     for (size_t i = 0; i < states.size(); ++i){
         lmd.push_back(0);
