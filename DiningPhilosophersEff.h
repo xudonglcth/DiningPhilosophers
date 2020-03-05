@@ -48,15 +48,15 @@ void syncAndAbsEff(size_t n){
     //first step: sych first two and reduce
     G = diningPhilPair[0].syncInT(diningPhilPair[1]);
     std::cout <<"Sync With G" << cnt ++ <<"\nSync State#: " << G.states.size() << "\nSync Trans#: " << G.transitions.size() <<"\n"<< std::endl;
-    taus.insert({1, 2*n+1});
+    taus.insert({1, 2, 3, 2*n + 2, 2*n + 3, 2*n +4});
     for (auto &t : G.transitions){
         if (taus.find(t[1]) != taus.end()){
             t[1] = 0;
         }
     }
     //This abstraction does nothing, so it can be commented
-    //G.transReduce();
-    //std::cout << "After Reduction State#: " << G.states.size() << "\nAfter reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
+    G.transReduce();
+    std::cout << "After Reduction State#: " << G.states.size() << "\nAfter reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
     //std::cout << "After reduction: " << std::endl;
     //for (const auto &i : G.transitions){
     //    std::cout << i[0] << " " << i[1] << " "<< i[2] << std::endl;
@@ -66,13 +66,15 @@ void syncAndAbsEff(size_t n){
     for (size_t i = 2; i < n - 1; ++i){
         G.syncInT(diningPhilPair[i]);
         std::cout <<"Sync With G" << cnt ++ << "\nSync State#: " << G.states.size() << "\nSync Trans#: " << G.transitions.size() <<"\n"<< std::endl;
-        taus.insert({2*i-2, 2*i-1, 2*n+2*i-2, 2*n+2*i-1});
+        //taus.insert({2*i-2, 2*i-1, 2*n+2*i-2, 2*n+2*i-1});
+        taus.insert({2*i, 2*i+1, 2*n+2*i+1, 2*n+2*i+2});
         for (auto &t : G.transitions){
             if (taus.find(t[1]) != taus.end()){
                 t[1] = 0;
             }
         }
         G.lmd[0] = 1;
+        /*
         if (cnt == 6){
             std::ofstream outFile("/Users/liangxudong/Desktop/VLTS/NewFile.txt");
             outFile <<"des (" << 0 <<", " <<G.transitions.size() <<", " <<G.states.size() <<")\n";
@@ -85,6 +87,7 @@ void syncAndAbsEff(size_t n){
                 }
             }
         }
+         */
         clock_t t1 = clock();
         G.transReduce();
         clock_t t2 = clock();
@@ -105,7 +108,8 @@ void syncAndAbsEff(size_t n){
         t[1] = 0;
     }
     G.lmd[0] = 1;
-    std::ofstream outFile("/Users/liangxudong/Desktop/VLTS/LastFile.txt");
+    //std::ofstream outFile("/Users/liangxudong/Desktop/VLTS/LastFile.txt");
+    /*
     outFile <<"des (" << 0 <<", " <<G.transitions.size() <<", " <<G.states.size() <<")\n";
     for (const auto &e : G.transitions) {
         if((e[1] == 0) && (e[0] != 0) && (e[2] != 0)){
@@ -116,9 +120,12 @@ void syncAndAbsEff(size_t n){
         }
     }
     clock_t t1 = clock();
+     */
     G.transReduce();
+    /*
     clock_t t2 = clock();
     std::cout<<"One reduction run time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
+     */
     for (const auto &iter : G.transitions){
         std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
     }

@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <boost/functional/hash.hpp>
 class System{
 public:
     using size_t_in_vec = std::vector<size_t >;
     using size_t_in_vec_in_vec =  std::vector<std::vector<size_t >>;
     using size_t_in_set = std::set<size_t >;
-    ///using hashtable_t = std::unordered_map<std::pair<size_t, std::set<std::pair<size_t , size_t >>>, size_t >;
     using hashtable_t = std::unordered_map<std::string, size_t >;
     using delta_t = std::map<std::vector<size_t >, std::set<size_t >>;
     using synced_delta_t = std::map<std::vector<size_t>, std::set<std::vector<size_t > > >;
@@ -24,6 +24,7 @@ public:
     using label_t = std::vector<std::set<std::pair<size_t, size_t>>>;
     using size_t_in_vec_in_set = std::set<std::vector<size_t> >;
     using synced_sigmaFeasible_t = std::map <std::vector<size_t>, std::set<size_t>>;
+    using label_each_t = std::set<std::pair<size_t, size_t>>;
     size_t_in_vec states, partitions, partitions_new, lmd, lower_bound, upper_bound;
     size_t_in_vec_in_vec transitions, transInStateOrder;
     size_t_in_set tau = {0}, sigma, init, sigma_sb;
@@ -34,6 +35,13 @@ public:
     synced_sigmaFeasible_t synced_sigmaFeasible;
     label_t label;
     std::map<size_t_in_vec, size_t> newStates;
+    template <typename Container> // we can make this generic for any container [1]
+    struct container_hash {
+        std::size_t operator()(Container const& c) const {
+            return boost::hash_range(c.begin(), c.end());
+        }
+    };
+    std::unordered_map<label_each_t, size_t, container_hash<label_each_t>> label_map;
     //Constructors;
     System() = default;
 
@@ -403,10 +411,9 @@ public:
         }
     }
     void transReduce(){
+        transitions.size();
         std::set<size_t > sts;
-        //std::cout << "Max capacity: "<<sts.max_size()<<std::endl;
         size_t n = states.size(), count;
-        hashtable_t hashtable;
         boundaries();
         partitions_new = lmd;
         if (partitions_new.empty()){
@@ -419,7 +426,7 @@ public:
             count = 0;
             partitions = partitions_new;
             label.clear();
-            hashtable.clear();
+            label_map.clear();
             for(size_t i = 0; i < n; i++){
                 label.emplace_back();
             }
@@ -430,27 +437,16 @@ public:
                     labelInsert(source, event, partitions[target]);
                 }
             }
-
+            size_t m = states.size() + 1;
             for (auto current_state : states){
-                std::string s_key;
-                s_key += std::to_string(partitions[current_state]);
-                s_key += ", ";
-                for (const auto &iter : label[current_state]){
-                    s_key += ("pair: " + std::to_string(iter.first) + " and "+ std::to_string(iter.second));
-                }
-                if(hashtable.find(s_key) == hashtable.end()){
-                    hashtable[s_key] = count++;
+                label[current_state].insert({partitions[current_state], m});
+                if (label_map.find(label[current_state]) == label_map.end()){
+                    label_map[label[current_state]] = count++;
                 }
             }
 
             for (auto current_state : states){
-                std::string s_key;
-                s_key += std::to_string(partitions[current_state]);
-                s_key += ", ";
-                for (const auto &iter : label[current_state]){
-                    s_key += ("pair: " + std::to_string(iter.first) + " and "+ std::to_string(iter.second));
-                }
-                partitions_new[current_state] = hashtable[s_key];
+                partitions_new[current_state] = label_map[label[current_state]];
             }
         }while(partitions_new != partitions);
         size_t_in_vec_in_set sPi;
@@ -470,10 +466,6 @@ public:
             states.push_back(i);
             lmd.push_back(0);
         }
-        //for (const auto& i : partitions_new){
-        //    std::cout << i << " ";
-        //}
-        //std::cout << std::endl;
     }
 
     System& syncInT(System &g_to_sync);

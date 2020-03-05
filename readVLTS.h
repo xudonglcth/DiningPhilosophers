@@ -84,9 +84,6 @@ std::tuple<state, transition> BigTest(const std::string& TestCase){
     }
     std::tuple<state, transition> res = {VLTS_State, VLTS_Trans};
     return res;
-    clock_t t1 = clock();
-    clock_t t2 = clock();
-    std::cout<<"Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
 }
 void testPerformance(const std::string& testCase){
     System t;

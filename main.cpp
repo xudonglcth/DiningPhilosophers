@@ -6,8 +6,10 @@
 #include "readVLTS.h"
 #include "SyncInT.h"
 #include "DiningPhilosophersEff.h"
+#include "test.h"
+#include "GroupDining.h"
 int main() {
-
+/*
     //Sync test
     {
         //System G1({0, 1}, {{0, 2, 1},
@@ -75,11 +77,11 @@ int main() {
         G11.syncInT(G11_);
 
     }
-
+*/
     //syncThenAbsEff(8);
     //syncThenAbsNew(10);
     clock_t t1 = clock();
-    syncAndAbsEff(100);
+    groupIn3(21);
     clock_t t2 = clock();
     std::cout<<"Incremental Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
     //syncAndAbsNew(14);
@@ -94,7 +96,7 @@ int main() {
     t2 = clock();
     std::cout<<"Brute-Force Approach Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
      */
-    //testPerformance("vasy_10_56");
+    ///testPerformance("vasy_40_60");
     //syncAndAbsNew(14);
     //syncThenAbsNew(7);
     return 0;

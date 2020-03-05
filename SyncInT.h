@@ -12,18 +12,10 @@ System& System::syncInT(System& g_to_sync){
     /*
      * Note:Extra sb(shared events) are ignored.
      */
-    size_t non_deterministic = 0;
-    std::map<std::vector<size_t>, size_t > synced_state_map, fixed_table;
-    std::map<std::vector<size_t>, bool> visited_table;
+    std::map<std::vector<size_t>, size_t > fixed_table;
     std::vector<std::set<std::vector<size_t > > > delta_x;
     size_t_in_vec v1, v2, v_temp, v_sb, v_union, v_diff;
-    size_t k = 0, x1, x2, cnt = 0, table_cnt = 0;
-    for(const auto & i : states){
-        for (const auto & j : g_to_sync.states){
-            fixed_table[{i, j}] = cnt++;
-            visited_table[{i, j}] = false;
-        }
-    }
+    size_t k = 0, x1, x2;
 
     init = {0};
     transSigma();
