@@ -90,6 +90,60 @@ std::vector<System> createDiningPhilosophersNew(size_t n){
     return diningPhilosophersV;
 }
 
+std::vector<System> createDiningPhilosophers2(size_t n){
+    System::size_t_in_vec take, put, eat;
+    System G;
+    std::vector<System> Gv, Rv, diningPhilosophersV;
+    size_t iter_Gn = 0, iter_Rn = 0, cnt = 0;
+    for (size_t i = 0; i < n; ++i){
+        Gv.push_back(G); Rv.push_back(G);
+    }
+
+
+    while(cnt < 2*n){
+        take.push_back(++cnt);
+        put.push_back(2*n + cnt);
+        eat.push_back(4*n + cnt);
+    }
+
+    for (auto &iter : Gv){
+        iter.states = {0, 1, 2, 3, 4, 5, 6};
+        iter.transitions = {
+                {0, take[2 * iter_Gn + 1], 2},
+                {0, take[2 * iter_Gn],     1},
+                {1, take[2 * iter_Gn + 1], 3},
+                {2, take[2 * iter_Gn],     3},
+                {3, eat[iter_Gn],          4},
+                {4, put[2 * iter_Gn + 1],  6},
+                {4, put[2 * iter_Gn],      5},
+                {5, put[2 * iter_Gn + 1],  0},
+                {6, put[2 * iter_Gn],      0}
+        };
+        iter.lmd = {1, 0, 0, 0, 0, 0, 0};
+        iter.init = {0};
+        ++iter_Gn;
+    }
+
+    for (auto &iter : Rv){
+        iter.states = {0, 1};
+        iter.transitions = {
+                {0, take[2 * iter_Rn],                                1},
+                {1, put[2 * iter_Rn],                                 0},
+                {0, take[(iter_Rn == 0) ? 2*n - 1 : 2 * iter_Rn - 1],   1},
+                {1, put[(iter_Rn == 0) ? 2*n - 1 : 2 * iter_Rn - 1],    0}
+        };
+        iter.lmd = {1, 0};
+        iter.init = {0};
+        ++iter_Rn;
+    }
+    for (size_t i = 0; i < n; ++i){
+        diningPhilosophersV.push_back(Gv[i]);
+        diningPhilosophersV.push_back(Rv[i]);
+    }
+
+    return diningPhilosophersV;
+}
+
 void syncAndAbsNew(size_t n){
     std::vector<System> diningPhils, diningPhilPair;
     size_t cnt = 2;
@@ -112,7 +166,7 @@ void syncAndAbsNew(size_t n){
             t[1] = 0;
         }
     }
-    G.transReduce();
+    G.transReduceDSV();
     std::cout << "After Reduction State#: " << G.states.size() << "\nAfter reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
     //std::cout << "After reduction: " << std::endl;
     //for (const auto &i : G.transitions){
@@ -130,7 +184,7 @@ void syncAndAbsNew(size_t n){
             }
         }
         G.lmd[0] = 1;
-        G.transReduce();
+        G.transReduceDSV();
         std::cout << "After Reduction State#: " << G.states.size() << "\nAfter Reduction Trans#: " << G.transitions.size() <<"\n"<< std::endl;
         //std::cout << "After reduction: " << std::endl;
         //for (const auto &i : G.transitions){
@@ -146,7 +200,7 @@ void syncAndAbsNew(size_t n){
         t[1] = 0;
     }
     G.lmd[0] = 1;
-    G.transReduce();
+    G.transReduceDSV();
     for (const auto &iter : G.transitions){
         std::cout << iter[0] << " "<< iter[1] << " " << iter[2] << std::endl;
     }
@@ -192,7 +246,7 @@ void syncThenAbsNew(size_t n){
     }
      */
     //clock_t t_1 = clock();
-    //G.transReduce();
+    //G.transReduceDSV();
     //clock_t t_2 = clock();
     //std::cout<<"Brute-Force Approach Abstraction Run Time: "<<(double)(t_2 - t_1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
     //for (const auto &iter : G.transitions){

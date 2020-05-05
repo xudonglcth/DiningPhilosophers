@@ -28,7 +28,9 @@ System& System::syncInT(System& g_to_sync){
     std::set_difference(v_union.begin(), v_union.end(), v_sb.begin(), v_sb.end(), std::back_inserter(v_diff));
     transitions.clear();
     states.clear();
-    X.clear();
+    if (!X.empty()){
+        X.clear();
+    }
     setCrossProduct(init, g_to_sync.init, X);
     delta_x.push_back(X);
     do{

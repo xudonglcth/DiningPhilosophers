@@ -37,7 +37,8 @@ std::vector<std::string> StringSplit(const std::string& aut, const std::string& 
 
 std::tuple<state, transition> BigTest(const std::string& TestCase){
     std::vector <std::string>  VecString, VecStringTemp;
-    std::string VLTS_Case = read_vlts("/Users/liangxudong/Desktop/VLTS/" + TestCase + ".aut");
+    //std::string VLTS_Case = read_vlts("/Users/liangxudong/Desktop/VLTS/" + TestCase + ".aut");
+    std::string VLTS_Case = read_vlts(TestCase);
     std::string delim = "\n";
     std::vector<size_t > SourceVec, EventVec, TargetVec;
     std::vector<std::string> EventVecRaw;
@@ -91,10 +92,25 @@ void testPerformance(const std::string& testCase){
     t.transitions = std::get<1> (BigTest(testCase));
     t.tau = {0};
     clock_t t1 = clock();
-    t.transReduce();
+    t.transReduceDSV2();
     clock_t t2 = clock();
     std::cout<<"Sigref: "<<std::endl;
     std::cout<<"After Reduction State#: "<< t.states.size()<< "\nAfter Reduction Trans#: "<< t.transitions.size()<<std::endl;
     std::cout<<"Run Time: "<<(double)(t2 - t1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
+}
+
+void reachPerformance(const std::string& testCase){
+    System t;
+    t.states = std::get<0> (BigTest(testCase));
+    t.transitions = std::get<1> (BigTest(testCase));
+    t.tau = {0};
+    t.init = {0};
+    std::set<size_t > rt = t.reachInT();
+    //std::vector<bool> rs = t.reachInStack();
+    std::set<size_t > rn = t.reachInTNew();
+    //std::set<size_t > rso = t.reachBreakPoint();
+    //std::cout << rso.size() << std::endl;
+    //std::cout << rt.size() << std::endl;
+    std::cout << rn.size() << std::endl;
 }
 #endif //LABELREF_READVLTS_H

@@ -103,7 +103,7 @@ void syncThenAbstract(size_t n){
         }
     }
     //clock_t t_1 = clock();
-    G.transReduce();
+    G.transReduceDSV();
     //clock_t t_2 = clock();
     //std::cout<<"Brute-Force Approach Abstraction Run Time: "<<(double)(t_2 - t_1) / CLOCKS_PER_SEC<<"s\n"<<std::endl;
     //for (const auto &iter : G.transitions){
